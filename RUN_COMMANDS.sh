@@ -55,7 +55,13 @@ runai delete job semantic-twin-dev     # ALWAYS do this when done — costs mone
 /opt/venv/radseg/bin/python -c "import torch; print('radseg:', torch.__version__, torch.cuda.is_available())"
 # expect: radseg: 2.4.x True
 
-# ── 5b. Smoke test SFS venv ───────────────────────────────────────────────────
+# ── 5b. Compile SFS CUDA extensions (first pod startup only, ~10 min) ────────
+# The image ships the source at /opt/splat-distiller but skips compilation
+# because GitHub Actions runners have no GPU. Run this once; the compiled
+# .so files land inside the venv and persist for the lifetime of the pod.
+/opt/venv/sfs/bin/pip install /opt/splat-distiller
+
+# Smoke test SFS venv
 /opt/venv/sfs/bin/python -c "import torch; print('sfs:', torch.__version__, torch.cuda.is_available())"
 # expect: sfs: 2.7.x True
 

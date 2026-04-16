@@ -72,11 +72,11 @@ RUN /opt/venv/sfs/bin/pip install \
 RUN /opt/venv/sfs/bin/pip install \
     faiss-gpu-cu12 || /opt/venv/sfs/bin/pip install faiss-cpu
 
-# Clone and install SFS (compiles CUDA extensions — takes ~10 min)
+# Clone SFS — CUDA extensions are NOT compiled here.
+# Compilation requires a real GPU and is done once at first pod startup via:
+#   /opt/venv/sfs/bin/pip install /opt/splat-distiller
 RUN git clone --single-branch --branch main \
     https://github.com/saliteta/splat-distiller /opt/splat-distiller
-WORKDIR /opt/splat-distiller
-RUN /opt/venv/sfs/bin/pip install .
 
 # ── Cache dir for torch hub (RADIO weights) ───────────────────────────────────
 # Weights are large (~1.5GB); mount PVC at /workspace so they persist
