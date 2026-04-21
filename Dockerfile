@@ -42,4 +42,4 @@ RUN git clone --single-branch --branch main https://github.com/saliteta/splat-di
 # Clean up
 RUN conda clean -afy
 
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "splat-distiller", "python"]
+ENTRYPOINT ["/bin/bash"]
