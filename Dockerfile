@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx \
     libglib2.0-0 \
     ffmpeg \
+    colmap \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Install Miniforge (conda-forge default, no Anaconda TOS prompt in CI)
