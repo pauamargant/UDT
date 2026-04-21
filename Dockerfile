@@ -39,7 +39,12 @@ RUN git clone --single-branch --branch main https://github.com/saliteta/splat-di
 # CUDA extensions are NOT compiled here — GitHub Actions runners have no GPU.
 # Run once at first pod startup: conda run -n splat-distiller pip install -e /app
 
+# 7. Install JupyterLab
+RUN pip install jupyterlab
+
 # Clean up
 RUN conda clean -afy
+
+EXPOSE 8888
 
 ENTRYPOINT ["/bin/bash"]
