@@ -36,8 +36,8 @@ RUN pip install faiss-gpu
 # 6. Clone and Install the Repo
 RUN git clone --single-branch --branch main https://github.com/saliteta/splat-distiller.git .
 
-# Install remaining requirements from the repo (Filtering out SAM if it exists in requirements)
-RUN pip install -e .
+# CUDA extensions are NOT compiled here — GitHub Actions runners have no GPU.
+# Run once at first pod startup: conda run -n splat-distiller pip install -e /app
 
 # Clean up
 RUN conda clean -afy
