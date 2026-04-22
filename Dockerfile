@@ -14,7 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     ffmpeg \
     colmap \
-    && rm -rf /var/lib/apt/lists/*
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd \
+    && echo 'root:runai' | chpasswd \
+    && sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # 2. Install Miniforge (conda-forge default, no Anaconda TOS prompt in CI)
 RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O miniforge.sh && \
@@ -48,4 +52,4 @@ RUN conda clean -afy
 
 EXPOSE 8888
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/bin/bash", "-c", "/usr/sbin/sshd && exec bash"]
