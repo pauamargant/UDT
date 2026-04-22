@@ -17,7 +17,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-server \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /run/sshd \
-    && echo 'root:runai' | chpasswd \
     && sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # 2. Install Miniforge (conda-forge default, no Anaconda TOS prompt in CI)
