@@ -70,6 +70,31 @@ Then open: http://localhost:8888
 
 ---
 
+## Remote development (Antigravity / VS Code)
+
+The image runs `sshd` automatically on startup. Set a password inside the pod first:
+
+```bash
+echo 'root:YOUR_PASSWORD' | chpasswd
+```
+
+Port-forward SSH from your local machine:
+
+```bash
+kubectl port-forward -n runai-dhlab-amargant pod/semantic-twin-dev-0-0 2222:22
+```
+
+Then connect via Remote SSH to `root@localhost:2222`, or add to `~/.ssh/config`:
+
+```
+Host runai-pod
+    HostName localhost
+    Port 2222
+    User root
+```
+
+---
+
 ## Cluster resources
 
 | Resource | Name |
