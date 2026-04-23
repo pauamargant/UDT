@@ -3,6 +3,9 @@ FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/opt/conda/bin:${PATH}"
+ARG USERNAME=appuser
+ARG USER_UID=1000
+ARG USER_GID=1000
 
 # 1. Install System Dependencies (including ffmpeg)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,15 +40,44 @@ RUN pip install faiss-gpu
 # 6. Clone and Install the Repo
 RUN git clone --single-branch --branch main https://github.com/saliteta/splat-distiller.git .
 
-# CUDA extensions are NOT compiled here — GitHub Actions runners have no GPU.
-# Run once at first pod startup: conda run -n splat-distiller pip install -e /app
+# 7. Bootstrap the project and CUDA/native submodules at image build time.
+# Mirrors the "first startup" manual steps from docs.
+RUN pip install setuptools==68.0.0
+RUN cd /app/splat_solver && \
+    python -m pip install -e . --no-build-isolation
+RUN cd /app/splat_solver/submodules/segment-anything-langsplat && \
+    MAX_JOBS=4 python -m pip install . --no-build-isolation
+RUN cd /app/splat_solver/submodules/gsplat && \
+    MAX_JOBS=4 python -m pip install . --no-build-isolation
+RUN cd /app/splat_solver/submodules/bsplat && \
+    MAX_JOBS=4 python -m pip install . --no-build-isolation
+RUN cd /app/splat_solver/submodules/gsplat_ext && \
+    MAX_JOBS=4 python -m pip install . --no-build-isolation
 
-# 7. Install JupyterLab
+# 8. Create and provision the feature-extraction environment.
+RUN conda create -y -n splat-distiller-feat --clone splat-distiller
+RUN conda run -n splat-distiller-feat pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
+RUN conda run -n splat-distiller-feat pip install timm==1.0.19 segment-anything scikit-image einops transformers==5.6.0
+RUN conda run -n splat-distiller-feat env LD_LIBRARY_PATH=/opt/conda/envs/splat-distiller-feat/lib MAX_JOBS=4 \
+    python -m pip install /app/splat_solver/submodules/gsplat --no-build-isolation
+RUN conda run -n splat-distiller-feat env LD_LIBRARY_PATH=/opt/conda/envs/splat-distiller-feat/lib MAX_JOBS=4 \
+    python -m pip install /app/splat_solver/submodules/bsplat --no-build-isolation
+RUN conda run -n splat-distiller-feat env LD_LIBRARY_PATH=/opt/conda/envs/splat-distiller-feat/lib MAX_JOBS=4 \
+    python -m pip install /app/splat_solver/submodules/gsplat_ext --no-build-isolation
+
+# 9. Install JupyterLab
 RUN pip install jupyterlab
 
 # Clean up
 RUN conda clean -afy
 
+# 10. Create non-root runtime user and grant ownership of writable paths.
+RUN groupadd --gid ${USER_GID} ${USERNAME} && \
+    useradd --uid ${USER_UID} --gid ${USER_GID} --create-home --shell /bin/bash ${USERNAME} && \
+    chown -R ${USERNAME}:${USERNAME} /app /opt/conda
+
 EXPOSE 8888
+
+USER ${USERNAME}
 
 ENTRYPOINT ["/bin/bash"]
